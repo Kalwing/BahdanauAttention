@@ -9,9 +9,9 @@ VAL_SPLIT = 0.15
 # test percentage is the rest
 assert TRAIN_SPLIT + VAL_SPLIT <= 1
 
-BASE_PATH = Path("DATASETS").resolve()
+BASE_PATH = Path("DATASETS")
 os.makedirs(str(BASE_PATH), exist_ok=True)
-SAVE_FOLDER = Path("RESULTS").resolve()
+SAVE_FOLDER = Path("RESULTS")
 os.makedirs(str(SAVE_FOLDER), exist_ok=True)
 DATA_NAME = "eng_train4.txt"
 
