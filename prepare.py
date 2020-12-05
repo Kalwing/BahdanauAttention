@@ -103,6 +103,21 @@ def indexesFromSentence(lang, sentence):
     """
     return [lang.word2index[word] for word in sentence.split(' ')]
 
+
+def sentenceFromIndexes(lang, sentence):
+    """
+    tokenizarion : replaces the word with its index in the dictionary
+
+    :param lang: The language of the sentence
+    :type lang: Lang
+    :param sentence: A sentence made of a serie of tokens
+    :type sentence: Tensor
+
+    :return: A string
+    """
+    return " ".join([lang.index2word[int(word)] for word in sentence])
+
+
 def tensorFromSentence(lang, sentence):
     indexes = indexesFromSentence(lang, sentence)
     indexes.append(EOS_token)
