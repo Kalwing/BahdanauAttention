@@ -115,6 +115,7 @@ class Decoder(nn.Module):
         c_i = torch.bmm(alpha, encoder_hiddens).permute(1, 0, 2)
         rnn_input = torch.cat((embedded, c_i), dim=2)
 
+
         output, hidden = self.rnn(rnn_input, last_dec_hidden.unsqueeze(0))
         assert (output == hidden).all()
 

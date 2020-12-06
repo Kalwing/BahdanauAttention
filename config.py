@@ -14,7 +14,7 @@ os.makedirs(str(BASE_PATH), exist_ok=True)
 SAVE_FOLDER = Path("RESULTS")
 os.makedirs(str(SAVE_FOLDER), exist_ok=True)
 
-FINETUNE_MODEL = "04-12-model.pt"
+FINETUNE_MODEL = None
 IN_DATA_NAME = "eng_train3.txt"
 OUT_DATA_NAME = None
 

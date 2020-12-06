@@ -23,7 +23,7 @@ class Lang:
         self.index2word = {0: "SOS", 1: "EOS", 2: "UNK"}
         self.word2index = {self.index2word[idx]: idx for idx in self.index2word.keys()}
         self.word2count = {values: 0 for values in self.index2word.values()}
-        self.n_words = 4  # next key of index2word which already contains 3 words (SOS,EOS,UNK)
+        self.n_words = 3  # next key of index2word which already contains 3 words (SOS,EOS,UNK)
 
     def add_sentence(self, sentence):
         for word in sentence.split():
@@ -39,13 +39,10 @@ class Lang:
             self.n_words += 1 # next key
 
 
-def prepare_line(line, common_words):
+def prepare_line(line):
     line = line.lower().replace("...", "DOT")
     line = re.sub('[^A-Za-z0-9 ]+', '', line)
-    return " ".join([
-            word if word in common_words else 'UNK'
-        for word in line.split()
-    ])
+    return line
 
 
 def readLang(lang_file):
@@ -57,8 +54,12 @@ def readLang(lang_file):
 
     print("Calculating the word distribution...")
     words2count = {}
-    for line in lines:
-        for word in line.split():
+    for i in range(len(lines)):
+        # Preparing data for processing
+        lines[i] = prepare_line(lines[i])
+
+        # Calculating the distribution
+        for word in lines[i].split():
             try:
                 words2count[word] += 1
             except KeyError:
@@ -69,13 +70,16 @@ def readLang(lang_file):
 
     print("Selecting only the {} most common words".format(N_WORDS))
     for i in range(len(lines)):
-        lines[i] = prepare_line(lines[i], common_words)
+        lines[i] = " ".join([
+                word if word in common_words else 'UNK'
+            for word in lines[i].split()
+        ])
     return lines, common_words
 
 
 def prepareData(input_lang_file, output_lang_file):
-    input_lines, words = readLang(input_lang_file)
-    output_lines, words = readLang(output_lang_file)
+    input_lines, input_words = readLang(input_lang_file)
+    output_lines, output_words = readLang(output_lang_file)
 
     input_lang = Lang(input_lang_file)
     output_lang = Lang(output_lang_file)
@@ -141,6 +145,7 @@ def tensorsFromPair(pair):
 
 if OUT_DATA_NAME is None:
     input_lang, output_lang, pairs = prepareData(str(IN_DATA_NAME), str(IN_DATA_NAME))
+    assert pairs[0][0] == pairs[0][1], pairs[:3]
 else:
     input_lang, output_lang, pairs = prepareData(str(IN_DATA_NAME), str(OUT_DATA_NAME))
 
