@@ -15,7 +15,7 @@ from prepare import (input_lang, output_lang, pairs, train_pairs, valid_pairs,
                     test_pairs, sentenceFromIndexes)
 from models import Attention, Encoder, Decoder, Seq2Seq
 from utils import loss_holder
-from config import SEED, BATCH_SIZE, N_EPOCHS, CLIP, SAVE_FOLDER
+from config import SEED, BATCH_SIZE, N_EPOCHS, CLIP, SAVE_FOLDER, FINETUNE_MODEL
 
 
 if SEED is not None:
@@ -34,6 +34,9 @@ attn = Attention(hidden_size=1000, hidden_unit=1000)
 enc = Encoder(input_dict_dim, hidden_size=1000, embedding_dim=620)
 dec = Decoder(output_dict_dim, attn, hidden_size=1000, embedding_dim=620)
 model = Seq2Seq(encoder=enc, decoder=dec, device=device).to(device)
+if FINETUNE_MODEL is not None:
+
+    model.load_state_dict()
 
 # define the optimizer
 optimizer = optim.Adam(model.parameters())
@@ -205,7 +208,7 @@ if __name__ == '__main__':
             )
 
     valid_loss = evaluate(model, valid_pairs, criterion)
-    model.load_state_dict(torch.load(save_name + "-model.pt"))
+    model.load_state_dict(torch.load(str(SAVE_FOLDER / save_name + "-model.pt")))
     test_loss = evaluate(model, train_pairs, criterion)
     print('Test Loss: {:.3}'.format(test_loss))
 
