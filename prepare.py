@@ -1,7 +1,8 @@
 import random
+import re
 import torch
 from config import (SEED, MAX_LENGTH, N_WORDS, TRAIN_SPLIT, VAL_SPLIT,
-                    BASE_PATH, DATA_NAME)
+                    BASE_PATH, IN_DATA_NAME, OUT_DATA_NAME)
 
 
 # Modules
@@ -22,7 +23,7 @@ class Lang:
         self.index2word = {0: "SOS", 1: "EOS", 2: "UNK"}
         self.word2index = {self.index2word[idx]: idx for idx in self.index2word.keys()}
         self.word2count = {values: 0 for values in self.index2word.values()}
-        self.n_words = 3  # next key of index2word which already contains 3 words (SOS,EOS,UNK)
+        self.n_words = 4  # next key of index2word which already contains 3 words (SOS,EOS,UNK)
 
     def add_sentence(self, sentence):
         for word in sentence.split():
@@ -35,7 +36,16 @@ class Lang:
             self.word2index[word] = self.n_words # add word in word2index
             self.word2count[word] = 1
             self.index2word[self.n_words] = word # add word in index2word
-            self.n_words += 1 # prochaine clé
+            self.n_words += 1 # next key
+
+
+def prepare_line(line, common_words):
+    line = line.lower().replace("...", "DOT")
+    line = re.sub('[^A-Za-z0-9 ]+', '', line)
+    return " ".join([
+            word if word in common_words else 'UNK'
+        for word in line.split()
+    ])
 
 
 def readLang(lang_file):
@@ -59,22 +69,22 @@ def readLang(lang_file):
 
     print("Selecting only the {} most common words".format(N_WORDS))
     for i in range(len(lines)):
-        lines[i] = " ".join([
-            word if word in common_words else 'UNK'
-            for word in lines[i].split()
-        ])
+        lines[i] = prepare_line(lines[i], common_words)
+    return lines, common_words
 
-    pairs = [(l, l) for l in lines if len(l.split()) <= MAX_LENGTH]
+
+def prepareData(input_lang_file, output_lang_file):
+    input_lines, words = readLang(input_lang_file)
+    output_lines, words = readLang(output_lang_file)
+
+    input_lang = Lang(input_lang_file)
+    output_lang = Lang(output_lang_file)
+
+    pairs = list(zip(input_lines, output_lines))
+    print("Had %s sentence pairs" % len(pairs))
+    pairs = [(pair[0], pair[1]) for pair in pairs if len(pair[0].split()) <= MAX_LENGTH]
     print(pairs[:5])
-    input_lang = Lang(lang_file)
-    output_lang = Lang(lang_file)
-
-    return input_lang, output_lang, pairs, common_words
-
-
-def prepareData(lang_file):
-    input_lang, output_lang, pairs, words = readLang(lang_file)
-    print("Read %s sentence pairs" % len(pairs))
+    print("Kept %s sentence pairs after removing the one too long" % len(pairs))
 
     print("\nCounting words...")
     for pair in pairs:
@@ -83,11 +93,9 @@ def prepareData(lang_file):
 
     print("Counted words (difference with n most common words come from trimming):")
     print(output_lang.name, output_lang.n_words)
-    #assert output_lang.n_words  == 42921, (output_lang.n_words, len(output_lang.word2index.keys()))
+
     print("Number of UNK: {}".format(output_lang.word2count['UNK']))
     return input_lang, output_lang, pairs
-
-input_lang, output_lang, pairs = prepareData(str(DATA_NAME))
 
 
 def indexesFromSentence(lang, sentence):
@@ -119,7 +127,8 @@ def sentenceFromIndexes(lang, sentence):
 
 
 def tensorFromSentence(lang, sentence):
-    indexes = [SOS_token].append(indexesFromSentence(lang, sentence))
+    indexes = [SOS_token]
+    indexes.extend(indexesFromSentence(lang, sentence))
     indexes.append(EOS_token)
     return torch.tensor(indexes, dtype=torch.long, device=device).view(-1, 1)
 
@@ -129,14 +138,21 @@ def tensorsFromPair(pair):
     target_tensor = tensorFromSentence(output_lang, pair[1])
     return (input_tensor, target_tensor)
 
+
+if OUT_DATA_NAME is None:
+    input_lang, output_lang, pairs = prepareData(str(IN_DATA_NAME), str(IN_DATA_NAME))
+else:
+    input_lang, output_lang, pairs = prepareData(str(IN_DATA_NAME), str(OUT_DATA_NAME))
+
 n = len(pairs)
 
 ntrain = int(TRAIN_SPLIT*n)
 nvalid = int(VAL_SPLIT*n)
 ntest = n - ntrain - nvalid
 
-shuffle_pairs = [tensorsFromPair(random.choice(pairs))
-                      for i in range(n)]
+idx = list(range(len(pairs)))
+random.shuffle(idx)
+shuffle_pairs = [tensorsFromPair(pairs[i]) for i in idx]
 
 train_pairs = shuffle_pairs[0:ntrain]
 valid_pairs = shuffle_pairs[ntrain:ntrain+nvalid]
