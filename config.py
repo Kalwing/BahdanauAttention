@@ -19,7 +19,7 @@ IN_DATA_NAME = "eng_train3.txt"
 OUT_DATA_NAME = None
 
 BATCH_SIZE = 256
-N_EPOCHS = 10
+N_EPOCHS = 15
 CLIP = 1 # Clip gradients norm to this value
 
 SEED = 1234

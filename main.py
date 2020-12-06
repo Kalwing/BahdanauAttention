@@ -215,13 +215,13 @@ if __name__ == '__main__':
         writer.writerow(
             ["Input Lang", "Pred", "GT"]
         )
-        for i in range(100):
-            pairs = random.choice(test_pairs)
+        for i in range(len(test_pairs)):
             pred = get_pred(model, pairs)
             input_sentence = sentenceFromIndexes(input_lang, pairs[0])
             pred_sentence = sentenceFromIndexes(output_lang, pred.argmax(-1))
             gt_sentence = sentenceFromIndexes(output_lang, pairs[1])
-            print("\t«{}» ->\t{}".format(input_sentence, pred_sentence))
+            if i < 10:
+                print("\t«{}» ->\t{}".format(input_sentence, pred_sentence))
             writer.writerow(
                 [input_sentence, pred_sentence, gt_sentence]
             )
