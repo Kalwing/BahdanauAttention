@@ -192,7 +192,7 @@ if __name__ == '__main__':
             best_valid_loss = valid_loss
             torch.save(
                 model.state_dict(),
-                (SAVE_FOLDER / (save_name + "-model.pt"))
+                str(SAVE_FOLDER / (save_name + "-model.pt"))
             )
 
         print('Epoch: {} | Time: {}m {}s'.format(epoch+1, epoch_mins, epoch_secs))
