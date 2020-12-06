@@ -87,7 +87,7 @@ def prepareData(lang_file):
     print("Number of UNK: {}".format(output_lang.word2count['UNK']))
     return input_lang, output_lang, pairs
 
-input_lang, output_lang, pairs = prepareData(str(BASE_PATH / DATA_NAME))
+input_lang, output_lang, pairs = prepareData(str(DATA_NAME))
 
 
 def indexesFromSentence(lang, sentence):
@@ -119,7 +119,7 @@ def sentenceFromIndexes(lang, sentence):
 
 
 def tensorFromSentence(lang, sentence):
-    indexes = indexesFromSentence(lang, sentence)
+    indexes = [SOS_token].append(indexesFromSentence(lang, sentence))
     indexes.append(EOS_token)
     return torch.tensor(indexes, dtype=torch.long, device=device).view(-1, 1)
 

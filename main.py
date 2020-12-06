@@ -170,7 +170,7 @@ if __name__ == '__main__':
     best_valid_loss = float('inf')
     save_name = '{}'.format(time.strftime("%d-%m"))
 
-    with open(str(SAVE_FOLDER / (save_name + "-evol.csv" )), "a") as fout:
+    with open(str(SAVE_FOLDER / (save_name + "-evol.csv" )), "w") as fout:
         writer = csv.writer(fout)
         writer.writerow(
             ["epoch", "train_loss", "valid_loss"]
