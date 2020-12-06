@@ -20,10 +20,10 @@ EOS_token = 1
 class Lang:
     def __init__(self, name):
         self.name = name
-        self.index2word = {0: "SOS", 1: "EOS", 2: "UNK"}
+        self.index2word = {0: "SOS", 1: "EOS", 2: "UNK", 3: "DOT"}
         self.word2index = {self.index2word[idx]: idx for idx in self.index2word.keys()}
         self.word2count = {values: 0 for values in self.index2word.values()}
-        self.n_words = 3  # next key of index2word which already contains 3 words (SOS,EOS,UNK)
+        self.n_words = 4  # next key of index2word which already contains 3 words (SOS,EOS,UNK)
 
     def add_sentence(self, sentence):
         for word in sentence.split():
