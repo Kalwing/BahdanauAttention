@@ -1,6 +1,14 @@
 # Bahdanau Attention
 
-Our implementation of [*Bahdanau et al* traduction with an attention mechanism](https://arxiv.org/pdf/1409.0473.pdf), experimenting with translating english to Yoda.
+Based on the article by Badhanau and Cho Neural machine translation by jointly learning to align and translate, we have taken the proposed method and applied it to a dataset different from the one used by the authors. Where Badhanau did English to French translation, we chose to do Yoda to English translation.
+
+The architecture is composed of :
+  - a 2 layers encoder (embedding + biRNN)
+  - a 3 layers attention mechanism (linear)
+  - a 3 layers decoder (embedding + RNN + linear)
+
+This architecture was designed to significantly improve the translation performance of a traditional encoder/decoder system on long sentences. In addition, it has been shown that translation performance is also significantly improved on short sentences, which is why we chose to use such an architecture.
+
 Project done as part of a "Deep Learning" course at Rouen Normandie University by M. Jeamart and T. Dargent.
 
 We copy pasted a lot from:
