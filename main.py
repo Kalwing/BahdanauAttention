@@ -216,8 +216,10 @@ if __name__ == '__main__':
     else :
         name = (save_name + "-model.pt")
     model.load_state_dict(torch.load(str(SAVE_FOLDER / name)))
-    #test_loss = evaluate(model, train_pairs, criterion)
-    #print('Test Loss: {:.3}'.format(test_loss))
+    test_loss = evaluate(model, train_pairs, criterion)
+    print('Test Loss: {:.3}'.format(test_loss))
+    with open(str(SAVE_FOLDER / (save_name + "-test.txt")), 'w') as fout:
+        fout.write(test_loss)
 
     print("\nExemples de prédictions:")
     with open(str(SAVE_FOLDER / (save_name + '-pred.csv')), 'w') as fout:
