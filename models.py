@@ -159,15 +159,15 @@ class Seq2Seq(nn.Module):
         # encoder_outputs is all hidden states of the input sequence
         encoder_hidden = self.encoder(src)
 
-        first_dec_hidden_state = self.W_0(encoder_hidden[-1, :, :])
-        assert first_dec_hidden_state.shape == (batch_size, self.decoder.hidden_size),first_dec_hidden_state.shape
+        last_dec_hidden_state = self.W_0(encoder_hidden[-1, :, :])
+        assert last_dec_hidden_state.shape == (batch_size, self.decoder.hidden_size), last_dec_hidden_state.shape
 
         # first input to the decoder is the <sos> tokens
         input_ = trad[0]
         for t in range(1, trad_len):
             # insert input word embedding, previous hidden state and all encoder hidden states
             # receive output tensor (predictions) and new hidden state
-            output, hidden = self.decoder(input_, first_dec_hidden_state, encoder_hidden)
+            output, hidden = self.decoder(input_, last_dec_hidden_state, encoder_hidden)
 
             # place predictions in a tensor holding predictions for each word
             outputs[t] = output
@@ -178,4 +178,5 @@ class Seq2Seq(nn.Module):
             # if teacher forcing, use the ground truth trad[t] word as next input
             # if not, use predicted token
             input_ = trad[t] if random.random() < teacher_forcing_ratio else word_id
+            last_dec_hidden_state = hidden
         return outputs

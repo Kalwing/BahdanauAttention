@@ -14,14 +14,14 @@ os.makedirs(str(BASE_PATH), exist_ok=True)
 SAVE_FOLDER = Path("RESULTS")
 os.makedirs(str(SAVE_FOLDER), exist_ok=True)
 
-FINETUNE_MODEL = None #"07-12-model.pt"
+FINETUNE_MODEL = "07-12-model.pt"
 
-LANG_REF_FILE = None #"eng_train3.txt"
-IN_DATA_NAME = "eng_train3.txt"
-OUT_DATA_NAME = None #"yoda_out.txt"
+LANG_REF_FILE = "eng_train3.txt"
+IN_DATA_NAME = "yoda_inp.txt"
+OUT_DATA_NAME = "yoda_out.txt"
 
-BATCH_SIZE = 256
-N_EPOCHS = 13
+BATCH_SIZE = 10
+N_EPOCHS = 50
 CLIP = 1 # Clip gradients norm to this value
 
 SEED = 42
