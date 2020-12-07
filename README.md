@@ -1,6 +1,6 @@
 # Bahdanau Attention
 
-Based on the article by Badhanau and Cho Neural machine translation by jointly learning to align and translate, we have taken the proposed method and applied it to a dataset different from the one used by the authors. Where Badhanau did English to French translation, we chose to do Yoda to English translation.
+Based on the article by Bahdanau and Cho Neural machine translation by jointly learning to align and translate, we have taken the proposed method and applied it to a dataset different from the one used by the authors. Where Bahdanau did English to French translation, we chose to do Yoda to English translation.
 
 The architecture is composed of :
   - a 2 layers encoder (embedding + biRNN)
