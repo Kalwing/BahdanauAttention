@@ -208,7 +208,7 @@ if __name__ == '__main__':
             )
 
     valid_loss = evaluate(model, valid_pairs, criterion)
-    model.load_state_dict(torch.load(str(SAVE_FOLDER / save_name + "-model.pt")))
+    model.load_state_dict(torch.load(str(SAVE_FOLDER / (save_name + "-model.pt"))))
     test_loss = evaluate(model, train_pairs, criterion)
     print('Test Loss: {:.3}'.format(test_loss))
 
