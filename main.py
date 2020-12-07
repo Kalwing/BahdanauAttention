@@ -183,9 +183,9 @@ if __name__ == '__main__':
 
         start_time = time.time()
 
-        train_loss = train(model,optimizer, train_pairs[:2*BATCH_SIZE], criterion, CLIP,BATCH_SIZE)
+        train_loss = train(model,optimizer, train_pairs, criterion, CLIP,BATCH_SIZE)
         # vérifier que l'output du décodeur est bien de taille (batch_size, taille du output dico) --> ok !
-        valid_loss = evaluate(model, valid_pairs[:2*BATCH_SIZE], criterion)
+        valid_loss = evaluate(model, valid_pairs, criterion)
 
         end_time = time.time()
 
@@ -219,7 +219,7 @@ if __name__ == '__main__':
     test_loss = evaluate(model, train_pairs, criterion)
     print('Test Loss: {:.3}'.format(test_loss))
     with open(str(SAVE_FOLDER / (save_name + "-test.txt")), 'w') as fout:
-        fout.write(test_loss)
+        fout.write(str(test_loss))
 
     print("\nExemples de prédictions:")
     with open(str(SAVE_FOLDER / (save_name + '-pred.csv')), 'w') as fout:
