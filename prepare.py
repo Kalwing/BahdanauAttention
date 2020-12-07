@@ -2,7 +2,7 @@ import random
 import re
 import torch
 from config import (SEED, MAX_LENGTH, N_WORDS, TRAIN_SPLIT, VAL_SPLIT,
-                    BASE_PATH, IN_DATA_NAME, OUT_DATA_NAME)
+                    BASE_PATH, IN_DATA_NAME, OUT_DATA_NAME, LANG_REF_FILE)
 
 
 # Modules
@@ -23,7 +23,7 @@ class Lang:
         self.index2word = {0: "SOS", 1: "EOS", 2: "UNK", 3: "DOT"}
         self.word2index = {self.index2word[idx]: idx for idx in self.index2word.keys()}
         self.word2count = {values: 0 for values in self.index2word.values()}
-        self.n_words = 4  # next key of index2word which already contains 3 words (SOS,EOS,UNK)
+        self.n_words = 4  # next key of index2word which already contains 4 words (SOS,EOS,UNK, DOT)
 
     def add_sentence(self, sentence):
         for word in sentence.split():
@@ -40,46 +40,55 @@ class Lang:
 
 
 def prepare_line(line):
-    line = line.lower().replace("...", "DOT")
+    line = line.lower().replace("...", " DOT ")
     line = re.sub('[^A-Za-z0-9 ]+', '', line)
     return line
 
 
-def readLang(lang_file):
+def readLang(lang_file, common_words=None):
     print("Reading lines...")
 
     # Read the file and split into lines
     with open(str(BASE_PATH/lang_file), "r", encoding='utf-8') as fin:
         lines = fin.readlines()
 
-    print("Calculating the word distribution...")
-    words2count = {}
-    for i in range(len(lines)):
-        # Preparing data for processing
-        lines[i] = prepare_line(lines[i])
+    if common_words is None:
+        print("Calculating the word distribution...")
+        words2count = {}
+        for i in range(len(lines)):
+            # Preparing data for processing
+            lines[i] = prepare_line(lines[i])
 
-        # Calculating the distribution
-        for word in lines[i].split():
-            try:
-                words2count[word] += 1
-            except KeyError:
-                words2count[word] = 1
-    words = list(set(words2count.keys()))
-    words.sort(key= lambda w: words2count[w], reverse=True)
-    common_words = set(words[:N_WORDS])
+            # Calculating the distribution
+            for word in lines[i].split():
+                try:
+                    words2count[word] += 1
+                except KeyError:
+                    words2count[word] = 1
+        words = list(set(words2count.keys()))
+        words.sort(key= lambda w: words2count[w], reverse=True)
+        common_words = set([*words[:N_WORDS], 'UNK', 'DOT'])
+    else:
+        for i in range(len(lines)):
+            # Preparing data for processing
+            lines[i] = prepare_line(lines[i])
 
     print("Selecting only the {} most common words".format(N_WORDS))
     for i in range(len(lines)):
         lines[i] = " ".join([
-                word if word in common_words else 'UNK'
+            word if word in common_words else 'UNK'
             for word in lines[i].split()
         ])
     return lines, common_words
 
 
 def prepareData(input_lang_file, output_lang_file):
-    input_lines, input_words = readLang(input_lang_file)
-    output_lines, output_words = readLang(output_lang_file)
+    if LANG_REF_FILE is not None:
+        ref_lines, ref_words = readLang(LANG_REF_FILE)
+        input_lines, input_words = readLang(input_lang_file, common_words=ref_words)
+    else:
+        input_lines, input_words = readLang(input_lang_file)
+    output_lines, input_words = readLang(output_lang_file, common_words=input_words)
 
     input_lang = Lang(input_lang_file)
     output_lang = Lang(output_lang_file)
@@ -87,14 +96,21 @@ def prepareData(input_lang_file, output_lang_file):
     pairs = list(zip(input_lines, output_lines))
     print("Had %s sentence pairs" % len(pairs))
     pairs = [(pair[0], pair[1]) for pair in pairs if len(pair[0].split()) <= MAX_LENGTH]
+    if LANG_REF_FILE is not None:
+        ref_lines = [line for line in ref_lines if len(line.split()) <= MAX_LENGTH]
     print(pairs[:5])
     print("Kept %s sentence pairs after removing the one too long" % len(pairs))
 
     print("\nCounting words...")
-    for pair in pairs:
-        input_lang.add_sentence(pair[0])
-        output_lang.add_sentence(pair[1])
 
+    if LANG_REF_FILE:
+        for line in ref_lines:
+            input_lang.add_sentence(line)
+            output_lang.add_sentence(line)
+    else:
+        for pair in pairs:
+            input_lang.add_sentence(pair[0])
+            output_lang.add_sentence(pair[1])
     print("Counted words (difference with n most common words come from trimming):")
     print(output_lang.name, output_lang.n_words)
 

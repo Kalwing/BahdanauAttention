@@ -35,8 +35,7 @@ enc = Encoder(input_dict_dim, hidden_size=1000, embedding_dim=620)
 dec = Decoder(output_dict_dim, attn, hidden_size=1000, embedding_dim=620)
 model = Seq2Seq(encoder=enc, decoder=dec, device=device).to(device)
 if FINETUNE_MODEL is not None:
-
-    model.load_state_dict()
+    model.load_state_dict(torch.load(str(SAVE_FOLDER / FINETUNE_MODEL)))
 
 # define the optimizer
 optimizer = optim.Adam(model.parameters())
@@ -48,7 +47,8 @@ criterion = nn.CrossEntropyLoss()
 
 def train(model, optimizer, train_pairs, criterion, clip, BATCH_SIZE):
     model.train()
-    nbatch = int(np.floor(len(train_pairs)/BATCH_SIZE))
+
+    nbatch = max(1, int(np.floor(len(train_pairs)/BATCH_SIZE)))
     epoch_loss = 0
 
     train_progress = tqdm(range(nbatch-1), ncols=100)
@@ -107,7 +107,7 @@ def epoch_time(start_time, end_time):
 
 
 def evaluate(model, pairs, criterion):
-    nbatch = int(np.floor(len(pairs) / BATCH_SIZE))
+    nbatch = max(1, int(np.floor(len(pairs) / BATCH_SIZE)))
 
     progress = tqdm(range(nbatch-1), ncols=100)
     progress.set_description("\033[90m Val")
@@ -177,15 +177,15 @@ if __name__ == '__main__':
         writer = csv.writer(fout)
         writer.writerow(
             ["epoch", "train_loss", "valid_loss"]
-         )
+        )
 
     for epoch in range(N_EPOCHS):
 
         start_time = time.time()
 
-        train_loss = train(model,optimizer, train_pairs, criterion, CLIP,BATCH_SIZE)
+        train_loss = train(model,optimizer, train_pairs[:2*BATCH_SIZE], criterion, CLIP,BATCH_SIZE)
         # vérifier que l'output du décodeur est bien de taille (batch_size, taille du output dico) --> ok !
-        valid_loss = evaluate(model, valid_pairs, criterion)
+        valid_loss = evaluate(model, valid_pairs[:2*BATCH_SIZE], criterion)
 
         end_time = time.time()
 
@@ -193,9 +193,13 @@ if __name__ == '__main__':
 
         if valid_loss < best_valid_loss:
             best_valid_loss = valid_loss
+            if FINETUNE_MODEL is not None:
+                name = (save_name + "-model-finet.pt")
+            else :
+                name = (save_name + "-model.pt")
             torch.save(
                 model.state_dict(),
-                str(SAVE_FOLDER / (save_name + "-model.pt"))
+                str(SAVE_FOLDER / name)
             )
 
         print('Epoch: {} | Time: {}m {}s'.format(epoch+1, epoch_mins, epoch_secs))
@@ -207,10 +211,13 @@ if __name__ == '__main__':
                 [epoch+1, train_loss, valid_loss]
             )
 
-    valid_loss = evaluate(model, valid_pairs, criterion)
-    model.load_state_dict(torch.load(str(SAVE_FOLDER / (save_name + "-model.pt"))))
-    test_loss = evaluate(model, train_pairs, criterion)
-    print('Test Loss: {:.3}'.format(test_loss))
+    if FINETUNE_MODEL is not None:
+        name = (save_name + "-model-finet.pt")
+    else :
+        name = (save_name + "-model.pt")
+    model.load_state_dict(torch.load(str(SAVE_FOLDER / name)))
+    #test_loss = evaluate(model, train_pairs, criterion)
+    #print('Test Loss: {:.3}'.format(test_loss))
 
     print("\nExemples de prédictions:")
     with open(str(SAVE_FOLDER / (save_name + '-pred.csv')), 'w') as fout:
@@ -219,10 +226,10 @@ if __name__ == '__main__':
             ["Input Lang", "Pred", "GT"]
         )
         for i in range(len(test_pairs)):
-            pred = get_pred(model, pairs)
-            input_sentence = sentenceFromIndexes(input_lang, pairs[0])
+            pred = get_pred(model, test_pairs[i])
+            input_sentence = sentenceFromIndexes(input_lang, test_pairs[i][0])
             pred_sentence = sentenceFromIndexes(output_lang, pred.argmax(-1))
-            gt_sentence = sentenceFromIndexes(output_lang, pairs[1])
+            gt_sentence = sentenceFromIndexes(output_lang, test_pairs[i][1])
             if i < 10:
                 print("\t«{}» ->\t{}".format(input_sentence, pred_sentence))
             writer.writerow(
