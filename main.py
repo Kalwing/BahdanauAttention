@@ -178,6 +178,7 @@ if __name__ == '__main__':
         writer.writerow(
             ["epoch", "train_loss", "valid_loss"]
         )
+    best_epoch = 0
 
     for epoch in range(N_EPOCHS):
 
@@ -193,6 +194,7 @@ if __name__ == '__main__':
 
         if valid_loss < best_valid_loss:
             best_valid_loss = valid_loss
+            best_epoch = epoch
             if FINETUNE_MODEL is not None:
                 name = (save_name + "-model-finet.pt")
             else :
@@ -217,6 +219,7 @@ if __name__ == '__main__':
         name = (save_name + "-model.pt")
     model.load_state_dict(torch.load(str(SAVE_FOLDER / name)))
     test_loss = evaluate(model, train_pairs, criterion)
+    print("Best epoch", best_epoch)
     print('Test Loss: {:.3}'.format(test_loss))
     with open(str(SAVE_FOLDER / (save_name + "-test.txt")), 'w') as fout:
         fout.write(str(test_loss))
